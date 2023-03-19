@@ -22,6 +22,7 @@ if (app.Environment.IsDevelopment())
 
 
 
+
 app.MapGet("api/status", async () =>
 {
 	var t = new Npgsql.NpgsqlConnectionStringBuilder();
@@ -29,6 +30,7 @@ app.MapGet("api/status", async () =>
     t.Username = "postgres";
     t.Password = "qwerty";
 	using var conn = new NpgsqlConnection(t.ConnectionString);
+
 
 	RequestTemplates templates = new("dapper_learn1");
 	var result = await conn.ExecuteReaderAsync(templates.FindDatabase());
@@ -99,9 +101,40 @@ app.MapGet("api/endpoint2", async () =>
             "DEFAULT", "LONDON",24.ToString()
         }
     }));
+
+
+
 });
 
 
 
+app.MapGet("api/endpoint3", async () =>
+{
+	var connStrBuilder = new Npgsql.NpgsqlConnectionStringBuilder();
+	connStrBuilder.Host = "localhost";
+	connStrBuilder.Username = "postgres";
+	connStrBuilder.Password = "qwerty";
+    connStrBuilder.Database = "dapper_learn2";
+
+	await using var conn = new NpgsqlConnection(connStrBuilder.ConnectionString);
+
+    var loaded = (await conn.QueryAsync<User>("""
+        SELECT 
+            user_id as Id, 
+            user_city as City,
+            user_age as Age
+        FROM users
+        WHERE user_age > 22;
+     """));
+
+	return Results.Ok(loaded);
+});
 
 app.Run();
+
+public class User
+{
+	public int Id { get; set; }
+	public string City { get; set; }
+	public short Age { get; set; }
+}
