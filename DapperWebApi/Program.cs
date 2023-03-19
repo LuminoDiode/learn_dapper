@@ -42,6 +42,66 @@ app.MapGet("api/status", async () =>
 });
 
 
+app.MapGet("api/endpoint1", async () =>
+{
+    var t = new Npgsql.NpgsqlConnectionStringBuilder();
+    t.Host = "localhost";
+    t.Username = "postgres";
+    t.Password = "qwerty";
+    t.IncludeErrorDetail = true;
+
+    DatabaseContext ctx = new("dapper_learn2", t.ConnectionString);
+    await ctx.EnsureDatabaseRecreated();
+
+    t.Database = "dapper_learn2";
+	ctx = new("dapper_learn2", t.ConnectionString);
+
+    await ctx.CreateTable("users", new Dictionary<string, string>
+    {
+        {"user_id", "SERIAL PRIMARY KEY" },
+        {"user_city","varchar(50)" },
+       {"user_age", "smallint CHECK(user_age>=0)" }
+    });
+
+    await ctx.InsertIntoTable("users", new string[][]
+    {
+        new string[]
+        {
+            "DEFAULT", "MOSCOW",22.ToString()
+        },
+         new string[]
+        {
+            "DEFAULT", "AMSTERDAM",23.ToString()
+		}
+        , new string[]
+        {
+            "DEFAULT", "LONDON",24.ToString()
+		}
+    });
+});
+
+app.MapGet("api/endpoint2", async () =>
+{
+    var templates = new RequestTemplates("dapper_learn2");
+
+    return Results.Ok(templates.InsertValues("users", new string[][]
+    {
+        new string[]
+        {
+            "DEFAULT", "MOSCOW",22.ToString()
+        },
+         new string[]
+        {
+            "DEFAULT", "AMSTERDAM",23.ToString()
+        }
+        , new string[]
+        {
+            "DEFAULT", "LONDON",24.ToString()
+        }
+    }));
+});
+
+
 
 
 app.Run();

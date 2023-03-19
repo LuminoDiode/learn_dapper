@@ -31,10 +31,10 @@ public class RequestTemplates
 
 
 	private const string _dropDatabase = """
-		DROP DATABASE {0};
+		DROP DATABASE {0} WITH (FORCE);
 	""";
 	public string DropDatabase()
-		=> string.Format(_createDatabase, this.DatabaseName);
+		=> string.Format(_dropDatabase, this.DatabaseName);
 
 
 	private const string _listTables = """
@@ -44,7 +44,7 @@ public class RequestTemplates
 		ORDER BY table_name;
 	""";
 	public string GetTables(string? searchName = null)
-	 => string.Format(_listTables, searchName is not null ?
+		=> string.Format(_listTables, searchName is not null ?
 		 $"AND table_name = '{searchName}'" : string.Empty);
 
 
@@ -52,6 +52,25 @@ public class RequestTemplates
 		CREATE TABLE {0}({1});
 	""";
 	public string CreateTable(string tableName, IEnumerable<KeyValuePair<string, string>> columnNameToType)
-	 => string.Format(_createTable, tableName,
-		 string.Join(",", columnNameToType.Select(x => $"{x.Key} {x.Value}")));
+		=> string.Format(_createTable, tableName,
+			string.Join(",", columnNameToType.Select(x => $"{x.Key} {x.Value}")));
+
+
+	private const string _dropTable = """
+		DROP TABLE {0};
+	""";
+	public string DropTable(string tableName)
+		=> string.Format(_createTable, tableName);
+
+
+	private const string _insertValue = """
+		INSERT INTO {0} VALUES{1};
+	""";
+	public string InsertValues(string tableName, IEnumerable<IEnumerable<object>> rows)
+		=> string.Format(_insertValue, tableName, 
+			string.Join(',',  rows.Select(x => $"({
+				string.Join(',', x.Select(y => 
+					string.Equals(y.ToString(),"default",
+						StringComparison.InvariantCultureIgnoreCase) 
+							? "DEFAULT" : $"\'{y}\'"))})")));
 }

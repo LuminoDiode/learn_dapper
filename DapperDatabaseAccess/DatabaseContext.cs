@@ -31,7 +31,7 @@ public class DatabaseContext: IDatabaseContext
 
 	public DatabaseContext(string databaseName, IEnumerable<KeyValuePair<string, object?>> connectionValues)
 		: this(databaseName, BuildStringFromValues(connectionValues)) { }
-	private DatabaseContext(string databaseName, string connectionString)
+	public DatabaseContext(string databaseName, string connectionString)
 	{
 		this.DatabaseName = databaseName;
 		this.ConnectionString = connectionString;
@@ -87,11 +87,23 @@ public class DatabaseContext: IDatabaseContext
 
 		return result.HasRows;
 	}
-
 	public async Task CreateTable(string tableName, Dictionary<string,string> columnToType)
 	{
 		await using var conn = new NpgsqlConnection(this.ConnectionString);
 		await conn.ExecuteAsync(_requestTemplates.CreateTable(tableName,columnToType));
+	}
+	public async Task DropTable(string tableName)
+	{
+		await using var conn = new NpgsqlConnection(this.ConnectionString);
+		await conn.ExecuteAsync(_requestTemplates.DropTable(tableName));
+	}
+	#endregion
+
+	#region Insert methods
+	public async Task InsertIntoTable(string tableName, IEnumerable<IEnumerable<object>> rows)
+	{
+		await using var conn = new NpgsqlConnection(this.ConnectionString);
+		await conn.ExecuteAsync(_requestTemplates.InsertValues(tableName, rows));
 	}
 	#endregion
 }
